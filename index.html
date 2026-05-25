@@ -276,6 +276,57 @@
     .mission-btn:active { transform: translateY(-1px); }
     @keyframes pulse-icon { 0% { transform: scale(1); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
     .mission-btn:hover .mission-icon { animation: pulse-icon 1s infinite; display: inline-block; }
+
+    /* --- INTERACTIVE CARD TABS --- */
+    .tab-header {
+      display: flex;
+      gap: 0.5rem;
+      border-bottom: 1px solid var(--color-border);
+      padding-bottom: 0.75rem;
+      margin-bottom: 1.25rem;
+    }
+    .tab-btn {
+      background: transparent;
+      border: 1px solid transparent;
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--color-text-muted);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .tab-btn:hover {
+      color: var(--color-text-main);
+      background: rgba(0,0,0,0.03);
+    }
+    @media (prefers-color-scheme: dark) {
+      .tab-btn:hover { background: rgba(255,255,255,0.05); }
+    }
+    .tab-btn.active {
+      background: var(--color-bg);
+      border-color: var(--color-border);
+      color: var(--color-text-main);
+    }
+    .tab-pane {
+      display: none;
+    }
+    .tab-pane.active {
+      display: block;
+    }
+    
+    /* Mock NCBI Screen Elements */
+    .ncbi-mock-screen {
+      background: #fafafa;
+      border: 1px solid #e1e4e8;
+      border-radius: 8px;
+      padding: 12px;
+      font-family: var(--font-sans);
+    }
+    @media (prefers-color-scheme: dark) {
+      .ncbi-mock-screen { background: #151517; border-color: #3a3a3c; }
+    }
+
   </style>
 </head>
 <body>
@@ -324,7 +375,7 @@
     
     <div class="grid" id="cardGrid">
       
-      <div class="card c-blue" data-color="#0066cc" onclick="toggleCard(this)" role="button" aria-expanded="false" tabindex="0">
+      <div class="card c-blue" data-id="lit" data-color="#0066cc" onclick="toggleCard(this)" role="button" aria-expanded="false" tabindex="0">
         <div class="card-badge">Literature</div>
         <div class="card-header">
           <div class="icon-box"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg></div>
@@ -335,36 +386,35 @@
           <svg class="icon-chevron" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"></path></svg>
         </div>
         <div class="card-content-wrapper" onclick="event.stopPropagation()"><div class="card-content"><div class="card-content-inner">
-          <div class="data-section">
-            <div class="data-header"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16m-7 6h7"></path></svg> Database Distinctions</div>
-            <div class="data-grid">
-              <div class="data-item"><strong>PubMed (Index Only)</strong> The world's largest biomedical citation index — 36M+ abstracts. Free to search, links to publisher sites. No guarantee of free full text.</div>
-              <div class="data-item"><strong>PMC (Full Text Archive)</strong> PubMed Central provides completely free, open-access full text of millions of journal articles. Mandated by NIH for federally funded research.</div>
-            </div>
+          
+          <div class="tab-header">
+            <button class="tab-btn active" onclick="switchCardTab(event, 'lit', 'theory')">Theory Guide</button>
+            <button class="tab-btn" onclick="switchCardTab(event, 'lit', 'screen')">NCBI Screen Preview</button>
           </div>
-          <div class="data-section">
-            <div class="data-header"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path></svg> Taxonomy System</div>
-            <div class="data-grid">
-              <div class="data-item"><strong>Tree of Life</strong> Curated classification covering 8 ranks: Domain → Kingdom → Phylum → Class → Order → Family → Genus → Species. Linked to all sequence records.</div>
-            </div>
-          </div>
-          <div class="data-section">
-            <div class="data-header"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg> Search Operators</div>
-            <div class="data-grid">
-              <div class="data-item">Boolean operators and field tags power precision searches.
-                <div class="pill-group">
-                  <span class="pill">[MeSH]</span>
-                  <span class="pill">[Author]</span>
-                  <span class="pill">[TIAB]</span>
-                  <span class="pill">AND / OR / NOT</span>
-                </div>
+
+          <div class="tab-pane active" id="pane-lit-theory">
+            <div class="data-section">
+              <div class="data-header">Database Distinctions</div>
+              <div class="data-grid">
+                <div class="data-item"><strong>PubMed (Index Only)</strong> Large citation index — 36M+ abstracts. Links to publisher sites. No guarantee of free full text.</div>
+                <div class="data-item"><strong>PMC (Full Text Archive)</strong> Completely free, open-access full text of millions of journal articles. Mandated by NIH.</div>
               </div>
             </div>
           </div>
+
+          <div class="tab-pane" id="pane-lit-screen">
+            <div class="ncbi-mock-screen">
+              <div style="font-size:11px; font-weight:700; color:#0066cc; margin-bottom:4px;">PubMed Abstract View (PMID: 3421182)</div>
+              <h4 style="font-size:13px; margin-bottom:6px;">Genomic landscapes of hereditary breast cancers...</h4>
+              <p style="font-size:11px; color:var(--color-text-muted); line-height:1.4;"><strong>Abstract:</strong> Variants inside the regulatory domains of BRCA1 transcripts directly correlated with structural pathogenetic destabilization shifts...</p>
+              <div class="pill-group"><span class="pill">MeSH: Breast Neoplasms</span><span class="pill">MeSH: Female</span></div>
+            </div>
+          </div>
+
         </div></div></div>
       </div>
 
-      <div class="card c-orange" data-color="#e65100" onclick="toggleCard(this)" role="button" aria-expanded="false" tabindex="0">
+      <div class="card c-orange" data-id="clin" data-color="#e65100" onclick="toggleCard(this)" role="button" aria-expanded="false" tabindex="0">
         <div class="card-badge">Clinical</div>
         <div class="card-header">
           <div class="icon-box"><svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M3 12h4l3-9 5 18 3-9h3"></path></svg></div>
@@ -375,31 +425,35 @@
           <svg class="icon-chevron" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"></path></svg>
         </div>
         <div class="card-content-wrapper" onclick="event.stopPropagation()"><div class="card-content"><div class="card-content-inner">
-          <div class="data-section">
-            <div class="data-header"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg> Variant Classifications</div>
-            <div class="data-grid">
-              <div class="data-item"><strong>Pathogenic / Likely Pathogenic</strong> Strong evidence the variant causes disease. Used in clinical diagnostics and genetic counseling reports.</div>
-              <div class="data-item"><strong>VUS (Variant of Uncertain Significance)</strong> Insufficient evidence to classify. Common bottleneck in clinical genomics — reclassified as data accumulates.</div>
-              <div class="data-item"><strong>Benign / Likely Benign</strong> Evidence supports no disease association. Often common population variants with high allele frequency.</div>
-            </div>
+          
+          <div class="tab-header">
+            <button class="tab-btn active" onclick="switchCardTab(event, 'clin', 'theory')">Theory Guide</button>
+            <button class="tab-btn" onclick="switchCardTab(event, 'clin', 'screen')">NCBI Screen Preview</button>
           </div>
-          <div class="data-section">
-            <div class="data-header"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg> Key Relationships</div>
-            <div class="data-grid">
-              <div class="data-item">ClinVar links each variant to:
-                <div class="pill-group">
-                  <span class="pill">Gene</span>
-                  <span class="pill">Condition (OMIM)</span>
-                  <span class="pill">dbSNP rsID</span>
-                  <span class="pill">Clinical assertion</span>
-                </div>
+
+          <div class="tab-pane active" id="pane-clin-theory">
+            <div class="data-section">
+              <div class="data-header">Variant Classifications</div>
+              <div class="data-grid">
+                <div class="data-item"><strong>Pathogenic / Likely Pathogenic</strong> Strong evidence the variant causes disease. Used in clinical diagnostics.</div>
+                <div class="data-item"><strong>VUS (Variant of Uncertain Significance)</strong> Insufficient evidence to classify. Common bottleneck in clinical genomics.</div>
               </div>
             </div>
           </div>
+
+          <div class="tab-pane" id="pane-clin-screen">
+            <div class="ncbi-mock-screen" style="overflow-x:auto;">
+              <table style="width:100%; font-size:11px; text-align:left; border-collapse:collapse;">
+                <tr style="border-bottom:1px solid var(--color-border); color:var(--color-text-muted);"><th>Variant ID</th><th>Interpretation</th><th>Review Status</th></tr>
+                <tr><td style="color:#0066cc; font-family:var(--font-mono);">rs121912488</td><td><span style="color:#d32f2f; font-weight:bold;">Pathogenic</span></td><td>⭐⭐⭐⭐ (expert panel)</td></tr>
+              </table>
+            </div>
+          </div>
+
         </div></div></div>
       </div>
 
-      <div class="card c-green" data-color="#008a5e" onclick="toggleCard(this)" role="button" aria-expanded="false" tabindex="0">
+      <div class="card c-green" data-id="gen" data-color="#008a5e" onclick="toggleCard(this)" role="button" aria-expanded="false" tabindex="0">
         <div class="card-badge">Genomics</div>
         <div class="card-header">
           <div class="icon-box"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg></div>
@@ -410,37 +464,35 @@
           <svg class="icon-chevron" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"></path></svg>
         </div>
         <div class="card-content-wrapper" onclick="event.stopPropagation()"><div class="card-content"><div class="card-content-inner">
-          <div class="data-section">
-            <div class="data-header"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg> Core Databases</div>
-            <div class="data-grid">
-              <div class="data-item"><strong>GenBank (Archival)</strong> Open-access — anyone can submit sequences. Over 500 billion nucleotide bases. Accepts raw, unverified submissions.</div>
-              <div class="data-item"><strong>RefSeq (Curated)</strong> NCBI-curated, non-redundant reference sequences. Each entry manually reviewed. Gold standard for genome annotation. Prefix: NM_ (mRNA), NP_ (protein), NC_ (chromosome).</div>
-            </div>
+          
+          <div class="tab-header">
+            <button class="tab-btn active" onclick="switchCardTab(event, 'gen', 'theory')">Theory Guide</button>
+            <button class="tab-btn" onclick="switchCardTab(event, 'gen', 'screen')">NCBI Screen Preview</button>
           </div>
-          <div class="data-section">
-            <div class="data-header"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg> FASTA Format</div>
-            <div class="data-grid">
-              <div class="data-item">Standard sequence format. Header line starts with &gt; followed by accession and description. Sequence follows on next lines.
-                <div class="pill-group">
-                  <span class="pill">&gt;NC_000001.11</span>
-                  <span class="pill">ATCGGCTAA...</span>
-                </div>
+
+          <div class="tab-pane active" id="pane-gen-theory">
+            <div class="data-section">
+              <div class="data-header">Core Databases</div>
+              <div class="data-grid">
+                <div class="data-item"><strong>GenBank (Archival)</strong> Open-access — anyone can submit sequences. Accepts raw, unverified submissions.</div>
+                <div class="data-item"><strong>RefSeq (Curated)</strong> NCBI-curated, non-redundant reference sequences. Gold standard for annotation.</div>
               </div>
             </div>
           </div>
-          <div class="data-section">
-            <div class="data-header"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064"></path></svg> INSDC Partnership</div>
-            <div class="data-grid">
-              <div class="data-item">GenBank synchronizes daily with EMBL-EBI (Europe) and DDBJ (Japan) — forming the International Nucleotide Sequence Database Collaboration.</div>
-            </div>
+
+          <div class="tab-pane" id="pane-gen-screen">
+            <div class="ncbi-mock-screen" style="font-family:var(--font-mono); font-size:11px; white-space:pre; overflow-x:auto;">&gt;NC_000001.11 Homo sapiens chromosome 1
+GATCAATGAGGTGGACACCAGAGGTAAGGGGGTTCTAAT
+ACCAGAGGTAAGGGGGTTCTAAATTTTAAACCGGTTTAA</div>
           </div>
+
         </div></div></div>
       </div>
 
-      <div class="card c-purple" data-color="#5e35b1" onclick="toggleCard(this)" role="button" aria-expanded="false" tabindex="0">
+      <div class="card c-purple" data-id="prot" data-color="#5e35b1" onclick="toggleCard(this)" role="button" aria-expanded="false" tabindex="0">
         <div class="card-badge">Structure</div>
         <div class="card-header">
-          <div class="icon-box"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 12m-3 0a3 3 0 1 0 6 0a3 3 0 1 0 -6 0"></path><path d="M12 15v4"></path><path d="M12 19m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"></path><path d="M12 9v-4"></path><path d="M12 5m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"></path><path d="M9.5 10.5l-3.5 -2"></path><path d="M6 8.5m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"></path><path d="M14.5 10.5l3.5 -2"></path><path d="M18 8.5m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"></path><path d="M9.5 13.5l-3.5 2"></path><path d="M6 15.5m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"></path><path d="M14.5 13.5l3.5 2"></path><path d="M18 15.5m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"></path></svg></div>
+          <div class="icon-box"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 12m-3 0a3 3 0 1 0 6 0a3 3 0 1 0 -6 0"></path><path d="M12 15v4"></path><path d="M12 19m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"></path><path d="M12 9v-4"></path><path d="M12 5m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"></path></svg></div>
           <div class="card-title-group" style="flex:1;">
             <h3>Protein Structures</h3>
             <p>Amino acid sequences, domains, and 3D modeling.</p>
@@ -448,41 +500,38 @@
           <svg class="icon-chevron" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"></path></svg>
         </div>
         <div class="card-content-wrapper" onclick="event.stopPropagation()"><div class="card-content"><div class="card-content-inner">
-          <div class="data-section">
-            <div class="data-header"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 10l-2 1m0 0l-2-1m2 1v2.5M20 7l-2 1m2-1l-2-1m2 1v2.5M14 4l-2-1-2 1M4 7l2-1M4 7l2 1M4 7v2.5M12 21l-2-1m2 1l2-1m-2 1v-2.5M6 18l-2-1v-2.5M18 18l2-1v-2.5"></path></svg> Structural Databases</div>
-            <div class="data-grid">
-              <div class="data-item"><strong>PDB Integration</strong> Links directly to the Protein Data Bank for experimentally-determined 3D structures via X-ray crystallography, cryo-EM, or NMR.</div>
-              <div class="data-item"><strong>CDD (Conserved Domain DB)</strong> Identifies functional domains and conserved motifs within a query protein sequence. Uses position-specific scoring matrices (PSSMs).</div>
-            </div>
+          
+          <div class="tab-header">
+            <button class="tab-btn active" onclick="switchCardTab(event, 'prot', 'theory')">Theory Guide</button>
+            <button class="tab-btn" onclick="switchCardTab(event, 'prot', 'screen')">NCBI Screen Preview</button>
           </div>
-          <div class="data-section">
-            <div class="data-header"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 3H5a2 2 0 00-2 2v4m6-6h10a2 2 0 012 2v4M9 3v18m0 0h10a2 2 0 002-2V9M9 21H5a2 2 0 01-2-2V9m0 0h18"></path></svg> Scoring: BLOSUM62</div>
-            <div class="data-grid">
-              <div class="data-item">Standard substitution matrix for protein alignments. Derived from blocks of ungapped alignments of related proteins with ~62% identity. Positive scores = favorable substitutions; negative = costly.
-                <div class="pill-group">
-                  <span class="pill">Trp→Trp: +11</span>
-                  <span class="pill">Trp→Gly: -3</span>
-                </div>
+
+          <div class="tab-pane active" id="pane-prot-theory">
+            <div class="data-section">
+              <div class="data-header">Structural Databases</div>
+              <div class="data-grid">
+                <div class="data-item"><strong>PDB Integration</strong> Links directly to the Protein Data Bank for experimentally-determined 3D folding structures.</div>
+                <div class="data-item"><strong>CDD (Conserved Domain)</strong> Identifies functional protein domains using scoring matrices.</div>
               </div>
             </div>
           </div>
-          <div class="data-section">
-            <div class="data-header"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"></path></svg> Protein DB Types</div>
-            <div class="data-grid">
-              <div class="data-item">
-                <div class="pill-group">
-                  <span class="pill">nr (non-redundant)</span>
-                  <span class="pill">UniProt/Swiss-Prot</span>
-                  <span class="pill">PDB sequences</span>
-                  <span class="pill">RefSeq proteins</span>
-                </div>
+
+          <div class="tab-pane" id="pane-prot-screen">
+            <div class="ncbi-mock-screen">
+              <div style="font-size:11px; font-weight:700; color:#5e35b1; margin-bottom:6px;">Conserved Domain Architecture Return</div>
+              <div style="display:flex; gap:2px; height:16px; background:var(--color-bg); border-radius:4px; overflow:hidden;">
+                <div style="width:30%; background:#5e35b1;" title="BRCT 1 Domain"></div>
+                <div style="width:40%; background:var(--color-border);"></div>
+                <div style="width:30%; background:#5e35b1;" title="BRCT 2 Domain"></div>
               </div>
+              <div style="font-size:10px; color:var(--color-text-muted); margin-top:4px; text-align:center;">Isolated Hits: BRCT Functional Repeat Superfamily</div>
             </div>
           </div>
+
         </div></div></div>
       </div>
 
-      <div class="card c-teal" data-color="#00796b" onclick="toggleCard(this)" role="button" aria-expanded="false" tabindex="0">
+      <div class="card c-teal" data-id="sra" data-color="#00796b" onclick="toggleCard(this)" role="button" aria-expanded="false" tabindex="0">
         <div class="card-badge">Big Data</div>
         <div class="card-header">
           <div class="icon-box"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 6a8 3 0 1016 0A8 3 0 104 6zm0 0v12a8 3 0 0016 0V6"></path><path d="M4 12a8 3 0 1016 0"></path></svg></div>
@@ -493,30 +542,34 @@
           <svg class="icon-chevron" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"></path></svg>
         </div>
         <div class="card-content-wrapper" onclick="event.stopPropagation()"><div class="card-content"><div class="card-content-inner">
-          <div class="data-section">
-            <div class="data-header"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg> Next-Gen Sequencing</div>
-            <div class="data-grid">
-              <div class="data-item"><strong>Raw Reads (FASTQ format)</strong> Stores petabytes of unaligned reads from Illumina, PacBio, Oxford Nanopore platforms. Each read has 4 lines: ID, sequence, separator, quality scores.</div>
-              <div class="data-item"><strong>FASTQ Quality Scores</strong> Phred quality scores (Q) encoded as ASCII characters. Q20 = 99% accuracy. Q30 = 99.9% accuracy. Minimum threshold for most bioinformatics pipelines.</div>
-            </div>
+          
+          <div class="tab-header">
+            <button class="tab-btn active" onclick="switchCardTab(event, 'sra', 'theory')">Theory Guide</button>
+            <button class="tab-btn" onclick="switchCardTab(event, 'sra', 'screen')">NCBI Screen Preview</button>
           </div>
-          <div class="data-section">
-            <div class="data-header"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"></path></svg> Access Tools</div>
-            <div class="data-grid">
-              <div class="data-item">
-                <div class="pill-group">
-                  <span class="pill">fasterq-dump</span>
-                  <span class="pill">prefetch</span>
-                  <span class="pill">SRA Toolkit</span>
-                  <span class="pill">AWS Open Data</span>
-                </div>
+
+          <div class="tab-pane active" id="pane-sra-theory">
+            <div class="data-section">
+              <div class="data-header">Next-Gen Sequencing</div>
+              <div class="data-grid">
+                <div class="data-item"><strong>Raw Reads (FASTQ)</strong> Stores unaligned trace files from Illumina, PacBio, or Nanopore pipelines. Includes ASCII base quality rows.</div>
               </div>
             </div>
           </div>
+
+          <div class="tab-pane" id="pane-sra-screen">
+            <div class="ncbi-mock-screen" style="font-family:var(--font-mono); font-size:11px; overflow-x:auto;">
+              @SRR001234.1 run_1 length=12<br>
+              GATTACAATGGC<br>
+              +<br>
+              C9F::EEEHI99
+            </div>
+          </div>
+
         </div></div></div>
       </div>
 
-      <div class="card c-red" data-color="#d32f2f" onclick="toggleCard(this)" role="button" aria-expanded="false" tabindex="0">
+      <div class="card c-red" data-id="blst" data-color="#d32f2f" onclick="toggleCard(this)" role="button" aria-expanded="false" tabindex="0">
         <div class="card-badge">Alignment</div>
         <div class="card-header">
           <div class="icon-box"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg></div>
@@ -526,34 +579,32 @@
           </div>
           <svg class="icon-chevron" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"></path></svg>
         </div>
+        <div class="card-badge">Alignment</div>
         <div class="card-content-wrapper" onclick="event.stopPropagation()"><div class="card-content"><div class="card-content-inner">
-          <div class="data-section">
-            <div class="data-header"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg> Scoring & Metrics</div>
-            <div class="data-grid">
-              <div class="data-item"><strong>E-Value (Expect Value)</strong> Expected number of hits of similar quality by chance alone. E &lt; 0.001 = significant. E = 3e-14 = near-perfect match. Lower is better.</div>
-              <div class="data-item"><strong>Bit Score</strong> Normalized alignment score — higher is better. Comparable across databases of different sizes. Derived from raw score using Karlin-Altschul statistics.</div>
-            </div>
+          
+          <div class="tab-header">
+            <button class="tab-btn active" onclick="switchCardTab(event, 'blst', 'theory')">Theory Guide</button>
+            <button class="tab-btn" onclick="switchCardTab(event, 'blst', 'screen')">NCBI Screen Preview</button>
           </div>
-          <div class="data-section">
-            <div class="data-header"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg> Algorithm Variants</div>
-            <div class="data-grid">
-              <div class="data-item">
-                <div class="pill-group">
-                  <span class="pill">blastn (DNA→DNA)</span>
-                  <span class="pill">blastp (prot→prot)</span>
-                  <span class="pill">blastx (DNA→prot)</span>
-                  <span class="pill">tblastn (prot→DNA)</span>
-                  <span class="pill">megablast</span>
-                </div>
+
+          <div class="tab-pane active" id="pane-blst-theory">
+            <div class="data-section">
+              <div class="data-header">Scoring & Metrics</div>
+              <div class="data-grid">
+                <div class="data-item"><strong>E-Value (Expect Value)</strong> Chance background noise frequency score. Target threshold should ideally sit under 0.001.</div>
               </div>
             </div>
           </div>
-          <div class="data-section">
-            <div class="data-header"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg> How BLAST Works</div>
-            <div class="data-grid">
-              <div class="data-item"><strong>1. Seed → Extend → Score</strong> Splits query into short "words" (k-mers). Finds exact matches in DB. Extends alignment in both directions while score stays above threshold. Applies Smith-Waterman locally.</div>
+
+          <div class="tab-pane" id="pane-blst-screen">
+            <div class="ncbi-mock-screen" style="font-size:11px;">
+              <div style="background:#d32f2f; height:4px; width:85%; margin-bottom:8px;"></div>
+              <strong>Query_1</strong>  1 ATCGGCTAA 9<br>
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|||||||||<br>
+              <strong>Sbjct_1</strong>  40 ATCGGCTAA 48
             </div>
           </div>
+
         </div></div></div>
       </div>
 
@@ -939,6 +990,32 @@
       drawMindMapLines();
       isTransitioning = false;
     }, 400);
+  }
+
+// --- SUB-CONTENT INTERACTIVE TAB CONTROLLER ---
+  function switchCardTab(event, cardId, mode) {
+    // Prevent execution trigger from collapsing the primary card panel container
+    event.stopPropagation();
+    
+    const cardElement = document.querySelector(`.card[data-id="${cardId}"]`);
+    if (!cardElement) return;
+
+    // Isolate context inside the targeted element panel configuration bound settings
+    const wrapper = cardElement.querySelector('.card-content-wrapper');
+    
+    // De-activate current button states
+    wrapper.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    // Activate target click selection state
+    event.currentTarget.classList.add('active');
+
+    // Toggle corresponding view panels layout matching selection IDs
+    wrapper.querySelectorAll('.tab-pane').forEach(pane => pane.classList.remove('active'));
+    
+    const activePane = wrapper.querySelector(`#pane-${cardId}-${mode}`);
+    if (activePane) activePane.classList.add('active');
+    
+    // Refresh connection strings to smoothly snap directly to the resized wrapper window boundaries
+    drawMindMapLines();
   }
 
 </script>
