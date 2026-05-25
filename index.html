@@ -99,29 +99,36 @@
     .search-clear:hover { background: var(--color-text-main); }
     .search-clear.visible { opacity: 1; pointer-events: all; }
 
-    /* --- MIND MAP BRANCHES (GRID) --- */
-    .grid { column-count: 1; column-gap: 1.5rem; position: relative; z-index: 2; }
-    @media (min-width: 850px) { .grid { column-count: 2; } }
+    /* --- TRUE CSS GRID (Fixes search masonry gaps) --- */
+    .grid { 
+      display: grid; 
+      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); 
+      gap: 1.5rem; 
+      position: relative; 
+      z-index: 2; 
+      align-items: start; /* Prevents inactive cards from stretching height */
+    }
     .grid:has(.card.active) .card:not(.active):not(.filtered-out) { opacity: 0.4; transform: scale(0.98); box-shadow: none; border-color: transparent; }
-    .card.filtered-out { opacity: 0 !important; transform: scale(0.9) !important; pointer-events: none; margin-bottom: 0; padding: 0; height: 0; border: none; overflow: hidden; }
+    .card.filtered-out { display: none !important; }
 
-    .card { background: var(--color-card); border-radius: var(--radius-lg); padding: 1.75rem; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04), 0 1px 3px rgba(0,0,0,0.02); border: 1px solid var(--color-border); cursor: pointer; position: relative; transition: transform 0.4s var(--os-spring), box-shadow 0.4s var(--os-spring), opacity 0.4s var(--os-spring), border-color 0.4s var(--os-spring), margin 0.4s ease; break-inside: avoid; margin-bottom: 1.5rem; transform-origin: top center; }
+    .card { background: var(--color-card); border-radius: var(--radius-lg); padding: 1.75rem; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04), 0 1px 3px rgba(0,0,0,0.02); border: 1px solid var(--color-border); cursor: pointer; position: relative; transition: transform 0.4s var(--os-spring), box-shadow 0.4s var(--os-spring), opacity 0.4s var(--os-spring), border-color 0.4s var(--os-spring); }
     .card:hover:not(.filtered-out) { box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08); }
     .card:active:not(.filtered-out) { transform: scale(0.985); }
     .card.active { box-shadow: 0 16px 50px rgba(0, 0, 0, 0.12), 0 4px 12px rgba(0,0,0,0.04) !important; border-color: rgba(0, 0, 0, 0.15) !important; transform: translateY(-4px) !important; z-index: 10; }
-
-    .card-header { display: flex; align-items: flex-start; gap: 1rem; margin-bottom: 1rem; }
+    
+    .card-header { display: flex; align-items: flex-start; gap: 1rem; margin-bottom: 0; }
     .icon-box { width: 48px; height: 48px; border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: transform 0.4s var(--os-spring); }
     .icon-box svg { width: 24px; height: 24px; }
     .card.active .icon-box { transform: scale(1.05); }
     .card-title-group h3 { font-size: 1.1rem; font-weight: 600; margin-bottom: 0.25rem; }
     .card-title-group p { font-size: 0.9rem; color: var(--color-text-muted); }
-    .card-badge { display: inline-block; font-size: 11px; font-weight: 700; text-transform: uppercase; padding: 4px 12px; border-radius: 99px; letter-spacing: 0.5px; margin-bottom: 0.5rem; }
+    .card-badge { display: inline-block; font-size: 11px; font-weight: 700; text-transform: uppercase; padding: 4px 12px; border-radius: 99px; letter-spacing: 0.5px; margin-bottom: 1rem; }
 
-    .card-content-wrapper { display: grid; grid-template-rows: 0fr; transition: grid-template-rows 0.5s var(--os-spring); }
+    /* Accordion Dropdown specific CSS */
+    .card-content-wrapper { display: grid; grid-template-rows: 0fr; transition: grid-template-rows 0.4s var(--os-spring); }
     .card.active .card-content-wrapper { grid-template-rows: 1fr; }
     .card-content { overflow: hidden; }
-    .card-content-inner { padding-top: 1.25rem; margin-top: 1rem; border-top: 1px solid var(--color-border); cursor: default; }
+    .card-content-inner { padding-top: 1.25rem; margin-top: 1.25rem; border-top: 1px solid var(--color-border); cursor: default; }
 
     .data-section { margin-bottom: 1.25rem; opacity: 0; transform: translateY(12px); transition: opacity 0.4s ease, transform 0.5s var(--os-spring); }
     .data-section:last-child { margin-bottom: 0; }
@@ -159,7 +166,7 @@
     .c-purple .step-icon { background: #f0ecfc; color: #5e35b1; }
     .c-red .step-icon { background: #fce8e8; color: #d32f2f; }
 
-    .icon-chevron { transition: transform 0.5s var(--os-spring); }
+    .icon-chevron { position: absolute; right: 1.75rem; top: 1.75rem; transition: transform 0.5s var(--os-spring); color: var(--color-text-muted); }
     .card.active .icon-chevron { transform: rotate(180deg); }
 
     /* --- CROSS-DATABASE WORKFLOW --- */
@@ -236,22 +243,22 @@
     #fab:hover { box-shadow: 0 8px 30px rgba(0,0,0,0.15); transform: translateY(-2px); }
     #fab svg { width: 14px; height: 14px; }
 
-    /* --- RESPONSIVE ADJUSTMENTS --- */
+    /* --- RESPONSIVE FIXES (Includes the Workflow Text Overlap Fix) --- */
     @media (max-width: 768px) {
-      /* --- START OF REPLACEMENT --- */
       .workflow-track { flex-direction: column; align-items: stretch; gap: 2rem; }
       .workflow-step { 
         display: grid; 
-        grid-template-columns: auto 1fr; 
-        column-gap: 1rem; 
+        grid-template-columns: 60px 1fr; 
+        grid-template-rows: auto auto auto; /* Explicitly forces text to stay on separate vertical lines */
+        column-gap: 1.25rem; 
         text-align: left; 
         align-items: start; 
       }
       .workflow-step:not(:last-child)::after { top: 50px; left: 24px; width: 2px; height: calc(100% + 10px); }
-      .step-icon { grid-column: 1; grid-row: 1 / 4; margin: 0; }
-      .step-num { margin-bottom: 2px; align-self: end; }
-      .step-title { margin-bottom: 2px; }
-      .step-desc { max-width: 100%; }
+      .step-icon { grid-column: 1; grid-row: 1 / 4; margin: 0 auto; }
+      .step-num { grid-column: 2; grid-row: 1; align-self: end; margin-bottom: 2px; }
+      .step-title { grid-column: 2; grid-row: 2; margin-bottom: 4px; }
+      .step-desc { grid-column: 2; grid-row: 3; max-width: 100%; }
       .seq-row { gap: 0.5rem; }
       .seq-label { width: 60px; font-size: 11px; }
       .seq-bases { gap: 2px; }
@@ -262,6 +269,13 @@
       .workflow-tooltip { display: none; }
       #fab { bottom: 1rem; right: 1rem; }
     }
+
+    /* --- MISSION BUTTON ANIMATIONS --- */
+    .mission-btn { transition: all 0.3s var(--os-spring); border: 1px solid var(--color-border) !important; }
+    .mission-btn:hover { transform: translateY(-4px); box-shadow: 0 8px 25px rgba(0, 102, 204, 0.15); border-color: #0066cc !important; }
+    .mission-btn:active { transform: translateY(-1px); }
+    @keyframes pulse-icon { 0% { transform: scale(1); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
+    .mission-btn:hover .mission-icon { animation: pulse-icon 1s infinite; display: inline-block; }
   </style>
 </head>
 <body>
@@ -274,31 +288,53 @@
     <div class="hero-node" id="heroNode">
       <div class="kicker">National Center for Biotechnology Information</div>
       <h1>Where scientists search the language of life</h1>
-      <p>NCBI is a massive ecosystem. Expand any module below to explore the underlying data structures, databases, and algorithms.</p>
+      <p>This is an interactive helper. Select a real-world research mission below to learn exactly how and where to search on the actual NCBI website:</p>
       
-      <div class="search-wrapper">
-        <input type="text" class="search-input" id="searchInput" placeholder="Search databases, tools, or terms (e.g. 'DNA')..." aria-label="Search NCBI topics">
-        <svg class="search-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-        <button class="search-clear" id="searchClear" aria-label="Clear search" title="Clear search">
-          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"></path></svg>
-        </button>
+      <div style="margin-top: 2rem; display: flex; flex-direction: column; gap: 1rem; text-align: left;">
+        <h4 style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--color-text-muted); letter-spacing: 1px;">Select a Search Mission:</h4>
+        
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem;">
+          <div class="btn mission-btn" onclick="activateMission('variant')" style="display: flex; flex-direction: column; align-items: flex-start; padding: 1.25rem 1rem; border-radius: 12px; text-align: left; height: auto; background: var(--color-bg); cursor: pointer; width: 100%;">
+            <strong style="color: var(--color-text-main); font-size: 14px; margin-bottom: 4px;"><span class="mission-icon" style="display:inline-block;">🔎</span> Mission 1: Check a Patient's Mutation</strong>
+            <span style="font-size: 12px; color: var(--color-text-muted); font-weight: normal;">How do I find out if a clinical gene variant is pathogenic or benign?</span>
+          </div>
+          
+          <div class="btn mission-btn" onclick="activateMission('blast')" style="display: flex; flex-direction: column; align-items: flex-start; padding: 1.25rem 1rem; border-radius: 12px; text-align: left; height: auto; background: var(--color-bg); cursor: pointer; width: 100%;">
+            <strong style="color: var(--color-text-main); font-size: 14px; margin-bottom: 4px;"><span class="mission-icon" style="display:inline-block;">🧬</span> Mission 2: Align an Unknown DNA Sequence</strong>
+            <span style="font-size: 12px; color: var(--color-text-muted); font-weight: normal;">I have a raw FASTA sequence string. How do I use BLAST to find its origin?</span>
+          </div>
+        </div>
       </div>
+
+      <div id="missionGuidance" style="display: none; margin-top: 2rem; padding: 1.5rem; background: rgba(0,102,204,0.05); border: 1px dashed #0066cc; border-radius: 12px; text-align: left;">
+        <h3 id="missionTitle" style="font-size: 1.1rem; color: #0066cc; margin-bottom: 0.75rem; font-weight: 700;"></h3>
+        <ol id="missionSteps" style="padding-left: 1.25rem; font-size: 13.5px; color: var(--color-text-main); line-height: 1.8;"></ol>
+      </div>
+
+      <form action="https://www.ncbi.nlm.nih.gov/search/all/" method="GET" target="_blank" style="margin-top: 2.5rem; display: block; position: relative;">
+        <div class="search-wrapper" style="margin-top: 0; max-width: 100%;">
+          <input type="text" name="term" class="search-input" id="searchInput" placeholder="Search local tools, or press Enter to search the real NCBI database..." aria-label="Search NCBI topics">
+          <svg class="search-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+          <button type="button" class="search-clear" id="searchClear" aria-label="Clear search" title="Clear search">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"></path></svg>
+          </button>
+        </div>
+      </form>
     </div>
     
     <div class="grid" id="cardGrid">
       
-      <!-- CARD 1: Literature -->
       <div class="card c-blue" data-color="#0066cc" onclick="toggleCard(this)" role="button" aria-expanded="false" tabindex="0">
+        <div class="card-badge">Literature</div>
         <div class="card-header">
           <div class="icon-box"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg></div>
           <div class="card-title-group" style="flex:1;">
             <h3>Literature & Taxonomy</h3>
             <p>Over 36 million biomedical citations and the tree of life.</p>
           </div>
-          <svg class="icon-chevron" width="20" height="20" fill="none" stroke="var(--color-text-muted)" stroke-width="2" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"></path></svg>
+          <svg class="icon-chevron" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"></path></svg>
         </div>
-        <div class="card-badge">Literature</div>
-        <div class="card-content-wrapper"><div class="card-content"><div class="card-content-inner" onclick="event.stopPropagation()">
+        <div class="card-content-wrapper" onclick="event.stopPropagation()"><div class="card-content"><div class="card-content-inner">
           <div class="data-section">
             <div class="data-header"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16m-7 6h7"></path></svg> Database Distinctions</div>
             <div class="data-grid">
@@ -328,18 +364,17 @@
         </div></div></div>
       </div>
 
-      <!-- CARD 2: ClinVar -->
       <div class="card c-orange" data-color="#e65100" onclick="toggleCard(this)" role="button" aria-expanded="false" tabindex="0">
+        <div class="card-badge">Clinical</div>
         <div class="card-header">
           <div class="icon-box"><svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M3 12h4l3-9 5 18 3-9h3"></path></svg></div>
           <div class="card-title-group" style="flex:1;">
             <h3>ClinVar & Genetics</h3>
             <p>Connecting human genomic variations to health and disease.</p>
           </div>
-          <svg class="icon-chevron" width="20" height="20" fill="none" stroke="var(--color-text-muted)" stroke-width="2" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"></path></svg>
+          <svg class="icon-chevron" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"></path></svg>
         </div>
-        <div class="card-badge">Clinical</div>
-        <div class="card-content-wrapper"><div class="card-content"><div class="card-content-inner" onclick="event.stopPropagation()">
+        <div class="card-content-wrapper" onclick="event.stopPropagation()"><div class="card-content"><div class="card-content-inner">
           <div class="data-section">
             <div class="data-header"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg> Variant Classifications</div>
             <div class="data-grid">
@@ -364,18 +399,17 @@
         </div></div></div>
       </div>
 
-      <!-- CARD 3: GenBank -->
       <div class="card c-green" data-color="#008a5e" onclick="toggleCard(this)" role="button" aria-expanded="false" tabindex="0">
+        <div class="card-badge">Genomics</div>
         <div class="card-header">
           <div class="icon-box"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg></div>
           <div class="card-title-group" style="flex:1;">
             <h3>Genomes & GenBank</h3>
             <p>Comprehensive DNA/RNA sequence repositories.</p>
           </div>
-          <svg class="icon-chevron" width="20" height="20" fill="none" stroke="var(--color-text-muted)" stroke-width="2" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"></path></svg>
+          <svg class="icon-chevron" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"></path></svg>
         </div>
-        <div class="card-badge">Genomics</div>
-        <div class="card-content-wrapper"><div class="card-content"><div class="card-content-inner" onclick="event.stopPropagation()">
+        <div class="card-content-wrapper" onclick="event.stopPropagation()"><div class="card-content"><div class="card-content-inner">
           <div class="data-section">
             <div class="data-header"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg> Core Databases</div>
             <div class="data-grid">
@@ -403,18 +437,17 @@
         </div></div></div>
       </div>
 
-      <!-- CARD 4: Protein Structures -->
       <div class="card c-purple" data-color="#5e35b1" onclick="toggleCard(this)" role="button" aria-expanded="false" tabindex="0">
+        <div class="card-badge">Structure</div>
         <div class="card-header">
           <div class="icon-box"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 12m-3 0a3 3 0 1 0 6 0a3 3 0 1 0 -6 0"></path><path d="M12 15v4"></path><path d="M12 19m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"></path><path d="M12 9v-4"></path><path d="M12 5m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"></path><path d="M9.5 10.5l-3.5 -2"></path><path d="M6 8.5m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"></path><path d="M14.5 10.5l3.5 -2"></path><path d="M18 8.5m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"></path><path d="M9.5 13.5l-3.5 2"></path><path d="M6 15.5m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"></path><path d="M14.5 13.5l3.5 2"></path><path d="M18 15.5m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"></path></svg></div>
           <div class="card-title-group" style="flex:1;">
             <h3>Protein Structures</h3>
             <p>Amino acid sequences, domains, and 3D modeling.</p>
           </div>
-          <svg class="icon-chevron" width="20" height="20" fill="none" stroke="var(--color-text-muted)" stroke-width="2" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"></path></svg>
+          <svg class="icon-chevron" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"></path></svg>
         </div>
-        <div class="card-badge">Structure</div>
-        <div class="card-content-wrapper"><div class="card-content"><div class="card-content-inner" onclick="event.stopPropagation()">
+        <div class="card-content-wrapper" onclick="event.stopPropagation()"><div class="card-content"><div class="card-content-inner">
           <div class="data-section">
             <div class="data-header"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 10l-2 1m0 0l-2-1m2 1v2.5M20 7l-2 1m2-1l-2-1m2 1v2.5M14 4l-2-1-2 1M4 7l2-1M4 7l2 1M4 7v2.5M12 21l-2-1m2 1l2-1m-2 1v-2.5M6 18l-2-1v-2.5M18 18l2-1v-2.5"></path></svg> Structural Databases</div>
             <div class="data-grid">
@@ -449,18 +482,17 @@
         </div></div></div>
       </div>
 
-      <!-- CARD 5: SRA -->
       <div class="card c-teal" data-color="#00796b" onclick="toggleCard(this)" role="button" aria-expanded="false" tabindex="0">
+        <div class="card-badge">Big Data</div>
         <div class="card-header">
           <div class="icon-box"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 6a8 3 0 1016 0A8 3 0 104 6zm0 0v12a8 3 0 0016 0V6"></path><path d="M4 12a8 3 0 1016 0"></path></svg></div>
           <div class="card-title-group" style="flex:1;">
             <h3>Sequence Read Archive</h3>
             <p>The largest public repository of raw NGS sequencing data.</p>
           </div>
-          <svg class="icon-chevron" width="20" height="20" fill="none" stroke="var(--color-text-muted)" stroke-width="2" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"></path></svg>
+          <svg class="icon-chevron" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"></path></svg>
         </div>
-        <div class="card-badge">Big Data</div>
-        <div class="card-content-wrapper"><div class="card-content"><div class="card-content-inner" onclick="event.stopPropagation()">
+        <div class="card-content-wrapper" onclick="event.stopPropagation()"><div class="card-content"><div class="card-content-inner">
           <div class="data-section">
             <div class="data-header"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg> Next-Gen Sequencing</div>
             <div class="data-grid">
@@ -484,18 +516,17 @@
         </div></div></div>
       </div>
 
-      <!-- CARD 6: BLAST -->
       <div class="card c-red" data-color="#d32f2f" onclick="toggleCard(this)" role="button" aria-expanded="false" tabindex="0">
+        <div class="card-badge">Alignment</div>
         <div class="card-header">
           <div class="icon-box"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg></div>
           <div class="card-title-group" style="flex:1;">
             <h3>BLAST Tool</h3>
             <p>Basic Local Alignment Search Tool logic & metrics.</p>
           </div>
-          <svg class="icon-chevron" width="20" height="20" fill="none" stroke="var(--color-text-muted)" stroke-width="2" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"></path></svg>
+          <svg class="icon-chevron" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"></path></svg>
         </div>
-        <div class="card-badge">Alignment</div>
-        <div class="card-content-wrapper"><div class="card-content"><div class="card-content-inner" onclick="event.stopPropagation()">
+        <div class="card-content-wrapper" onclick="event.stopPropagation()"><div class="card-content"><div class="card-content-inner">
           <div class="data-section">
             <div class="data-header"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg> Scoring & Metrics</div>
             <div class="data-grid">
@@ -601,7 +632,6 @@
 
 </div>
 
-<!-- Floating Action Button -->
 <button id="fab" onclick="resetAll()" aria-label="Close all cards and return to top">
   <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 10l7-7m0 0l7 7m-7-7v18"></path></svg>
   Reset View
@@ -650,6 +680,7 @@
     const rootRect = rootNode.getBoundingClientRect();
     const startX = rootRect.left - containerRect.left + (rootRect.width / 2);
     const startY = rootRect.bottom - containerRect.top - 20;
+    
     cards.forEach((card) => {
       if (card.classList.contains('filtered-out')) return;
       const cardRect = card.getBoundingClientRect();
@@ -659,6 +690,7 @@
       const curveHeight = Math.abs(endY - startY) * 0.4;
       const d = `M ${startX} ${startY} C ${startX} ${startY + curveHeight}, ${endX} ${endY - curveHeight}, ${endX} ${endY}`;
       path.setAttribute('d', d);
+      
       if (card.classList.contains('active')) {
         path.setAttribute('class', 'mindmap-path path-active');
         const color = card.getAttribute('data-color');
@@ -674,38 +706,49 @@
   window.addEventListener('load', drawMindMapLines);
   window.addEventListener('resize', () => { requestAnimationFrame(drawMindMapLines); });
 
-  // --- TOGGLE CARD ---
+  // --- TOGGLE CARD (SMART GRID IN-PLACE EXPANSION) ---
   function toggleCard(element) {
     const isActive = element.classList.contains('active');
     document.querySelectorAll('.card').forEach(card => {
       card.classList.remove('active');
       card.setAttribute('aria-expanded', 'false');
     });
+    
     if (!isActive) {
       element.classList.add('active');
       element.setAttribute('aria-expanded', 'true');
     }
-    drawMindMapLines();
-    setTimeout(drawMindMapLines, 400);
+
+    // This creates the gorgeous effect where the colorful SVG line 
+    // smoothly sticks to the card as the CSS transition makes it grow taller!
+    let start = Date.now();
+    let animateLines = setInterval(() => {
+      drawMindMapLines();
+      if (Date.now() - start > 450) clearInterval(animateLines);
+    }, 15);
+    
     updateFab();
   }
 
   // --- KEYBOARD SUPPORT ---
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
-      const anyActive = document.querySelector('.card.active');
-      if (anyActive) {
-        document.querySelectorAll('.card').forEach(card => {
-          card.classList.remove('active');
-          card.setAttribute('aria-expanded', 'false');
-        });
-        drawMindMapLines();
-        updateFab();
+      document.querySelectorAll('.card').forEach(card => {
+        card.classList.remove('active');
+        card.setAttribute('aria-expanded', 'false');
+      });
+      drawMindMapLines();
+      
+      if (isTransitioning) return;
+      const guidanceBox = document.getElementById('missionGuidance');
+      if(guidanceBox && guidanceBox.style.display === 'block') {
+         guidanceBox.style.display = 'none';
+         guidanceBox.removeAttribute('data-current-mission');
       }
+      updateFab();
     }
   });
 
-  // Keyboard activation for cards (Enter/Space)
   document.querySelectorAll('.card').forEach(card => {
     card.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' || e.key === ' ') {
@@ -792,6 +835,112 @@
   const style = document.createElement('style');
   style.textContent = '@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }';
   document.head.appendChild(style);
+
+  // Spam clicking guard for Missions
+  let isTransitioning = false;
+
+  function activateMission(type) {
+    if (isTransitioning) return;
+    
+    const guidanceBox = document.getElementById('missionGuidance');
+    const title = document.getElementById('missionTitle');
+    const steps = document.getElementById('missionSteps');
+    
+    const isCurrentlyOpen = guidanceBox.style.display === 'block';
+    const currentMissionType = guidanceBox.getAttribute('data-current-mission');
+
+    // Toggle logic for missions
+    if (isCurrentlyOpen && currentMissionType === type) {
+      isTransitioning = true;
+      guidanceBox.style.display = 'none';
+      guidanceBox.removeAttribute('data-current-mission');
+      document.querySelectorAll('.card').forEach(c => { c.classList.remove('active'); c.setAttribute('aria-expanded', 'false'); });
+      drawMindMapLines();
+      setTimeout(() => { isTransitioning = false; }, 400);
+      return;
+    }
+
+    isTransitioning = true;
+    guidanceBox.setAttribute('data-current-mission', type);
+    document.querySelectorAll('.card').forEach(c => { c.classList.remove('active'); c.setAttribute('aria-expanded', 'false'); });
+
+    if (type === 'variant') {
+      title.innerText = "🎯 Actionable Strategy: Investigating Variants in NCBI";
+      steps.innerHTML = `
+        <li><strong>Step 1:</strong> Head over to the primary <strong>NCBI Homepage</strong> and toggle the search database dropdown to <strong>ClinVar</strong>.</li>
+        <li><strong>Step 2:</strong> Type in your targeted gene name (e.g., <em>BRCA1</em>).</li>
+        <li><strong>Step 3:</strong> Review the results to isolate <strong>Pathogenic</strong> classifications.</li>
+        
+        <div style="margin-top: 1.5rem; background: var(--color-card); border: 1px solid var(--color-border); border-radius: 8px; padding: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
+          <div style="font-size: 11px; font-weight: 700; color: var(--color-text-muted); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 1px;">Example: Actual ClinVar Output Format</div>
+          <div style="overflow-x: auto;">
+            <table style="width: 100%; text-align: left; border-collapse: collapse; font-size: 13px; min-width: 450px;">
+              <tr style="border-bottom: 1px solid var(--color-border); color: var(--color-text-muted);">
+                <th style="padding-bottom: 6px;">Variant</th>
+                <th style="padding-bottom: 6px;">Condition</th>
+                <th style="padding-bottom: 6px;">Clinical Significance</th>
+              </tr>
+              <tr>
+                <td style="padding: 10px 0; color: #0066cc; font-family: var(--font-mono);">NM_007294.4(BRCA1):c.5096G>A</td>
+                <td>Breast-ovarian cancer, familial</td>
+                <td><span style="background: #fce8e8; border: 1px solid #f7cccc; color: #d32f2f; padding: 3px 8px; border-radius: 6px; font-weight: 600; font-size: 11px;">Pathogenic</span></td>
+              </tr>
+            </table>
+          </div>
+          <p style="font-size: 12px; color: var(--color-text-muted); margin-top: 12px; margin-bottom: 0;">* NCBI outputs this as a tabulated database row indicating if the mutation is dangerous. You do not get a graphical output here.</p>
+        </div>
+      `;
+      guidanceBox.style.display = 'block';
+      
+      const clinvarCard = document.querySelector('.c-orange');
+      if (clinvarCard) toggleCard(clinvarCard);
+      
+    } else if (type === 'blast') {
+      title.innerText = "🎯 Actionable Strategy: Running Sequence Alignments via BLAST";
+      steps.innerHTML = `
+        <li><strong>Step 1:</strong> Navigate to the main NCBI dashboard and launch the <strong>BLAST</strong> portal.</li>
+        <li><strong>Step 2:</strong> Choose <strong>blastn</strong> for nucleotide strings (DNA/RNA).</li>
+        <li><strong>Step 3:</strong> Paste your FASTA sequence, run the search, and sort by <strong>E-Value</strong>.</li>
+
+        <div style="margin-top: 1.5rem; background: var(--color-card); border: 1px solid var(--color-border); border-radius: 8px; padding: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
+          <div style="font-size: 11px; font-weight: 700; color: var(--color-text-muted); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 1px;">Example: Actual BLAST Output Format</div>
+          
+          <div style="width: 100%; height: 10px; background: var(--color-bg); border-radius: 99px; margin-bottom: 16px; overflow: hidden; display: flex;">
+            <div style="width: 75%; background: #d32f2f;" title="High score alignment"></div>
+            <div style="width: 15%; background: #e65100;" title="Medium score alignment"></div>
+          </div>
+
+          <div style="overflow-x: auto;">
+            <table style="width: 100%; text-align: left; border-collapse: collapse; font-size: 13px; min-width: 450px;">
+              <tr style="border-bottom: 1px solid var(--color-border); color: var(--color-text-muted);">
+                <th style="padding-bottom: 6px;">Description</th>
+                <th style="padding-bottom: 6px;">Max Score</th>
+                <th style="padding-bottom: 6px;">E value</th>
+                <th style="padding-bottom: 6px;">Per. Ident</th>
+              </tr>
+              <tr>
+                <td style="padding: 10px 0; color: #0066cc;">Homo sapiens mutant BRCA1 mRNA</td>
+                <td style="font-family: var(--font-mono);">5234</td>
+                <td style="font-family: var(--font-mono); font-weight: bold;">0.0</td>
+                <td style="font-family: var(--font-mono);">99.8%</td>
+              </tr>
+            </table>
+          </div>
+          <p style="font-size: 12px; color: var(--color-text-muted); margin-top: 12px; margin-bottom: 0;">* NCBI outputs a red/pink graphical bar chart followed by a detailed metrics table.</p>
+        </div>
+      `;
+      guidanceBox.style.display = 'block';
+      
+      const blastCard = document.querySelector('.c-red');
+      if (blastCard) toggleCard(blastCard);
+    }
+    
+    setTimeout(() => {
+      drawMindMapLines();
+      isTransitioning = false;
+    }, 400);
+  }
+
 </script>
 
 </body>
