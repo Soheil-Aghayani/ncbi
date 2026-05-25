@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧬</text></svg>">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NCBI Interactive Explainer</title>
+  <style>
+    :root {
+      --color-bg: #f5f5f7;
+      --color-card: #ffffff;
+      --color-text-main: #1d1d1f;
+      --color-text-muted: #86868b;
+      --color-border: rgba(0, 0, 0, 0.1);
+      --color-surface: rgba(255,255,255,0.6);
+      --radius-sm: 12px;
+      --radius-lg: 24px;
+      --font-sans: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      --font-mono: ui-monospace, SFMono-Regular, Consolas, monospace;
+      --os-spring: cubic-bezier(0.25, 1, 0.3, 1);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --color-bg: #1c1c1e;
+        --color-card: #2c2c2e;
+        --color-text-main: #f5f5f7;
+        --color-text-muted: #98989d;
+        --color-border: rgba(255, 255, 255, 0.1);
+        --color-surface: rgba(44,44,46,0.8);
+      }
+      .search-input { background: rgba(44,44,46,0.8) !important; }
+      .search-input:focus { background: #3a3a3c !important; }
+      .btn { background: #3a3a3c !important; }
+      .btn:hover { background: #48484a !important; }
+      .btn-secondary { background: transparent !important; }
+      .btn-secondary:hover { background: rgba(255,255,255,0.08) !important; }
+      .data-item { background: #1c1c1e !important; }
+      .pill { background: rgba(255,255,255,0.06) !important; border-color: rgba(255,255,255,0.1) !important; }
+      .c-blue .pill { background: rgba(0,102,204,0.2) !important; border-color: rgba(0,102,204,0.3) !important; }
+      .c-green .pill { background: rgba(0,138,94,0.2) !important; border-color: rgba(0,138,94,0.3) !important; }
+      .c-purple .pill { background: rgba(94,53,177,0.2) !important; border-color: rgba(94,53,177,0.3) !important; }
+      .c-red .pill { background: rgba(211,47,47,0.2) !important; border-color: rgba(211,47,47,0.3) !important; }
+      .c-orange .pill { background: rgba(230,81,0,0.2) !important; border-color: rgba(230,81,0,0.3) !important; }
+      .c-teal .pill { background: rgba(0,121,107,0.2) !important; border-color: rgba(0,121,107,0.3) !important; }
+      .c-blue .icon-box, .c-blue .card-badge { background: rgba(0,102,204,0.15) !important; }
+      .c-green .icon-box, .c-green .card-badge { background: rgba(0,138,94,0.15) !important; }
+      .c-purple .icon-box, .c-purple .card-badge { background: rgba(94,53,177,0.15) !important; }
+      .c-red .icon-box, .c-red .card-badge { background: rgba(211,47,47,0.15) !important; }
+      .c-orange .icon-box, .c-orange .card-badge { background: rgba(230,81,0,0.15) !important; }
+      .c-teal .icon-box, .c-teal .card-badge { background: rgba(0,121,107,0.15) !important; }
+      .c-blue .step-icon { background: rgba(0,102,204,0.15) !important; }
+      .c-orange .step-icon { background: rgba(230,81,0,0.15) !important; }
+      .c-green .step-icon { background: rgba(0,138,94,0.15) !important; }
+      .c-purple .step-icon { background: rgba(94,53,177,0.15) !important; }
+      .c-red .step-icon { background: rgba(211,47,47,0.15) !important; }
+      .workflow-box { background: var(--color-card); }
+      #fab { background: #3a3a3c !important; color: var(--color-text-main) !important; box-shadow: 0 4px 20px rgba(0,0,0,0.4) !important; }
+      #fab:hover { background: #48484a !important; }
+      .workflow-tooltip { background: #3a3a3c !important; border-color: rgba(255,255,255,0.1) !important; color: var(--color-text-main) !important; }
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background-color: var(--color-bg);
+      color: var(--color-text-main);
+      font-family: var(--font-sans);
+      -webkit-font-smoothing: antialiased;
+      line-height: 1.5;
+      padding: 3rem 1rem;
+      overflow-x: hidden;
+    }
+
+    .container { max-width: 960px; margin: 0 auto; position: relative; }
+
+    /* --- MIND MAP COORDINATE WRAPPER --- */
+    #mindmap-container { position: relative; margin-bottom: 4rem; }
+    #mindmap-svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
+    .mindmap-path { fill: none; transition: stroke 0.4s var(--os-spring), stroke-width 0.4s var(--os-spring), filter 0.4s var(--os-spring), opacity 0.4s ease; opacity: 1; }
+    .path-faint { stroke: var(--color-border); stroke-width: 2px; }
+    .path-active { stroke-width: 4px; }
+
+    /* --- MIND MAP ROOT (HERO) --- */
+    .hero-node { text-align: center; margin-bottom: 4rem; position: relative; background: var(--color-card); padding: 2.5rem 2rem; border-radius: var(--radius-lg); box-shadow: 0 8px 30px rgba(0, 0, 0, 0.04); border: 1px solid var(--color-border); z-index: 2; }
+    .kicker { display: inline-block; font-size: 13px; font-weight: 600; color: var(--color-text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 1rem; }
+    .hero-node h1 { font-size: 2.5rem; font-weight: 700; letter-spacing: -0.5px; margin-bottom: 1rem; color: var(--color-text-main); }
+    .hero-node p { font-size: 1.1rem; color: var(--color-text-muted); max-width: 600px; margin: 0 auto; }
+
+    /* --- LIVE SEARCH BAR --- */
+    .search-wrapper { margin: 2rem auto 0; max-width: 450px; position: relative; }
+    .search-input { width: 100%; padding: 14px 40px 14px 44px; border-radius: 99px; border: 1px solid var(--color-border); background: rgba(255, 255, 255, 0.6); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); font-size: 15px; font-family: var(--font-sans); color: var(--color-text-main); box-shadow: 0 4px 15px rgba(0,0,0,0.03); outline: none; transition: all 0.3s var(--os-spring); }
+    .search-input::placeholder { color: var(--color-text-muted); }
+    .search-input:focus { box-shadow: 0 0 0 4px rgba(0, 102, 204, 0.15), 0 4px 20px rgba(0,0,0,0.08); border-color: #0066cc; background: var(--color-card); }
+    .search-icon { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: var(--color-text-muted); width: 20px; height: 20px; pointer-events: none; transition: color 0.3s ease; }
+    .search-input:focus ~ .search-icon { color: #0066cc; }
+    .search-clear { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); width: 20px; height: 20px; border-radius: 50%; background: var(--color-text-muted); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.2s ease, background 0.2s ease; }
+    .search-clear svg { width: 10px; height: 10px; stroke: white; stroke-width: 2.5; }
+    .search-clear:hover { background: var(--color-text-main); }
+    .search-clear.visible { opacity: 1; pointer-events: all; }
+
+    /* --- MIND MAP BRANCHES (GRID) --- */
+    .grid { column-count: 1; column-gap: 1.5rem; position: relative; z-index: 2; }
+    @media (min-width: 850px) { .grid { column-count: 2; } }
+    .grid:has(.card.active) .card:not(.active):not(.filtered-out) { opacity: 0.4; transform: scale(0.98); box-shadow: none; border-color: transparent; }
+    .card.filtered-out { opacity: 0 !important; transform: scale(0.9) !important; pointer-events: none; margin-bottom: 0; padding: 0; height: 0; border: none; overflow: hidden; }
+
+    .card { background: var(--color-card); border-radius: var(--radius-lg); padding: 1.75rem; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04), 0 1px 3px rgba(0,0,0,0.02); border: 1px solid var(--color-border); cursor: pointer; position: relative; transition: transform 0.4s var(--os-spring), box-shadow 0.4s var(--os-spring), opacity 0.4s var(--os-spring), border-color 0.4s var(--os-spring), margin 0.4s ease; break-inside: avoid; margin-bottom: 1.5rem; transform-origin: top center; }
+    .card:hover:not(.filtered-out) { box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08); }
+    .card:active:not(.filtered-out) { transform: scale(0.985); }
+    .card.active { box-shadow: 0 16px 50px rgba(0, 0, 0, 0.12), 0 4px 12px rgba(0,0,0,0.04) !important; border-color: rgba(0, 0, 0, 0.15) !important; transform: translateY(-4px) !important; z-index: 10; }
+
+    .card-header { display: flex; align-items: flex-start; gap: 1rem; margin-bottom: 1rem; }
+    .icon-box { width: 48px; height: 48px; border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: transform 0.4s var(--os-spring); }
+    .icon-box svg { width: 24px; height: 24px; }
+    .card.active .icon-box { transform: scale(1.05); }
+    .card-title-group h3 { font-size: 1.1rem; font-weight: 600; margin-bottom: 0.25rem; }
+    .card-title-group p { font-size: 0.9rem; color: var(--color-text-muted); }
+    .card-badge { display: inline-block; font-size: 11px; font-weight: 700; text-transform: uppercase; padding: 4px 12px; border-radius: 99px; letter-spacing: 0.5px; margin-bottom: 0.5rem; }
+
+    .card-content-wrapper { display: grid; grid-template-rows: 0fr; transition: grid-template-rows 0.5s var(--os-spring); }
+    .card.active .card-content-wrapper { grid-template-rows: 1fr; }
+    .card-content { overflow: hidden; }
+    .card-content-inner { padding-top: 1.25rem; margin-top: 1rem; border-top: 1px solid var(--color-border); cursor: default; }
+
+    .data-section { margin-bottom: 1.25rem; opacity: 0; transform: translateY(12px); transition: opacity 0.4s ease, transform 0.5s var(--os-spring); }
+    .data-section:last-child { margin-bottom: 0; }
+    .card.active .data-section { opacity: 1; transform: translateY(0); }
+    .card.active .data-section:nth-child(1) { transition-delay: 0.05s; }
+    .card.active .data-section:nth-child(2) { transition-delay: 0.12s; }
+    .card.active .data-section:nth-child(3) { transition-delay: 0.19s; }
+    .card.active .data-section:nth-child(4) { transition-delay: 0.26s; }
+    .card.active .data-section:nth-child(5) { transition-delay: 0.33s; }
+
+    .data-header { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700; color: var(--color-text-muted); text-transform: uppercase; margin-bottom: 8px; letter-spacing: 0.5px; }
+    .data-header svg { width: 14px; height: 14px; }
+    .data-grid { display: grid; gap: 10px; }
+    .data-item { font-size: 13.5px; color: var(--color-text-main); background: var(--color-bg); padding: 10px 12px; border-radius: 10px; border: 1px solid var(--color-border); }
+    .data-item strong { font-weight: 600; color: var(--color-text-main); display: block; margin-bottom: 2px; font-size: 13px; }
+    .pill-group { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+    .pill { font-family: var(--font-mono); font-size: 11px; background: rgba(0,0,0,0.05); padding: 2px 8px; border-radius: 6px; color: var(--color-text-main); border: 1px solid rgba(0,0,0,0.05); }
+
+    /* Colors */
+    .c-blue .icon-box, .c-blue .card-badge { background: #e8f2fc; color: #0066cc; }
+    .c-green .icon-box, .c-green .card-badge { background: #e8f8f2; color: #008a5e; }
+    .c-purple .icon-box, .c-purple .card-badge { background: #f0ecfc; color: #5e35b1; }
+    .c-red .icon-box, .c-red .card-badge { background: #fce8e8; color: #d32f2f; }
+    .c-orange .icon-box, .c-orange .card-badge { background: #fff4e5; color: #e65100; }
+    .c-teal .icon-box, .c-teal .card-badge { background: #e0f8f5; color: #00796b; }
+    .c-blue .pill { background: #e8f2fc; border-color: #cce0f5; color: #0052a3; }
+    .c-green .pill { background: #e8f8f2; border-color: #ccebe0; color: #006b49; }
+    .c-purple .pill { background: #f0ecfc; border-color: #dfd7f7; color: #4b2a8e; }
+    .c-red .pill { background: #fce8e8; border-color: #f7cccc; color: #a82525; }
+    .c-orange .pill { background: #fff4e5; border-color: #ffe0b2; color: #e65100; }
+    .c-teal .pill { background: #e0f8f5; border-color: #b2dfdb; color: #00796b; }
+    .c-blue .step-icon { background: #e8f2fc; color: #0066cc; }
+    .c-orange .step-icon { background: #fff4e5; color: #e65100; }
+    .c-green .step-icon { background: #e8f8f2; color: #008a5e; }
+    .c-purple .step-icon { background: #f0ecfc; color: #5e35b1; }
+    .c-red .step-icon { background: #fce8e8; color: #d32f2f; }
+
+    .icon-chevron { transition: transform 0.5s var(--os-spring); }
+    .card.active .icon-chevron { transform: rotate(180deg); }
+
+    /* --- CROSS-DATABASE WORKFLOW --- */
+    .section-title { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 1.5px; color: var(--color-text-muted); text-align: center; margin-bottom: 1.5rem; }
+    .workflow-box { background: var(--color-card); border-radius: var(--radius-lg); padding: 2.5rem 2rem; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04); border: 1px solid var(--color-border); margin-bottom: 4rem; overflow: visible; }
+    .workflow-header { text-align: center; margin-bottom: 3rem; }
+    .workflow-header h3 { font-size: 1.25rem; font-weight: 700; margin-bottom: 0.5rem; }
+    .workflow-header p { font-size: 14px; color: var(--color-text-muted); }
+    .workflow-track { display: flex; justify-content: space-between; align-items: flex-start; position: relative; gap: 1rem; }
+    .workflow-step { flex: 1; display: flex; flex-direction: column; align-items: center; text-align: center; position: relative; z-index: 2; transition: transform 0.3s var(--os-spring); cursor: pointer; }
+    .workflow-step:hover { transform: translateY(-6px); }
+    .workflow-step:not(:last-child)::after { content: ''; position: absolute; top: 24px; left: 50%; width: 100%; height: 2px; background: var(--color-border); z-index: -1; }
+    .step-icon { width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 1rem; border: 6px solid var(--color-card); box-shadow: 0 2px 8px rgba(0,0,0,0.06); transition: box-shadow 0.3s ease, transform 0.3s var(--os-spring); }
+    .workflow-step:hover .step-icon { box-shadow: 0 8px 24px rgba(0,0,0,0.15); transform: scale(1.1); }
+    .step-icon svg { width: 20px; height: 20px; }
+    .step-num { font-family: var(--font-mono); font-size: 10px; font-weight: 700; color: var(--color-text-muted); text-transform: uppercase; margin-bottom: 4px; letter-spacing: 1px; }
+    .step-title { font-size: 13px; font-weight: 700; color: var(--color-text-main); margin-bottom: 6px; }
+    .step-desc { font-size: 12px; color: var(--color-text-muted); line-height: 1.4; max-width: 140px; }
+
+    /* Workflow tooltip */
+    .workflow-tooltip {
+      position: absolute; bottom: calc(100% + 12px); left: 50%; transform: translateX(-50%) scale(0.9);
+      background: var(--color-card); border: 1px solid var(--color-border); border-radius: 12px;
+      padding: 12px 14px; width: 200px; font-size: 12px; color: var(--color-text-muted);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.1); opacity: 0; pointer-events: none;
+      transition: opacity 0.2s ease, transform 0.25s var(--os-spring); z-index: 100; line-height: 1.5;
+    }
+    .workflow-tooltip strong { display: block; margin-bottom: 4px; color: var(--color-text-main); font-size: 12px; }
+    .workflow-tooltip::after { content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%); border: 6px solid transparent; border-top-color: var(--color-border); }
+    .workflow-step:hover .workflow-tooltip { opacity: 1; transform: translateX(-50%) scale(1); }
+
+    /* --- DEMO (WITH FASTA EXPORT) --- */
+    .demo-box { background: var(--color-card); border-radius: var(--radius-lg); padding: 2rem; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04); border: 1px solid var(--color-border); margin-bottom: 2rem; overflow: hidden; }
+    .demo-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid var(--color-border); flex-wrap: wrap; gap: 1rem; }
+    .demo-header h3 { font-size: 1.1rem; font-weight: 600; margin: 0; }
+    .btn-group { display: flex; gap: 0.75rem; }
+    .btn { background: var(--color-bg); border: 1px solid var(--color-border); padding: 6px 16px; border-radius: 99px; font-size: 13px; font-weight: 600; color: var(--color-text-main); cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: background 0.2s, transform 0.1s; }
+    .btn:hover { background: #e5e5ea; }
+    .btn:active { transform: scale(0.95); }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+    .btn-secondary { background: transparent; color: var(--color-text-muted); border-color: transparent; }
+    .btn-secondary:hover { background: rgba(0,0,0,0.05); color: var(--color-text-main); }
+
+    /* --- MOBILE BUG FIX: SCROLLABLE SEQUENCE AREA --- */
+    #seqBox { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 10px; margin-bottom: 10px; min-height: 80px; display: flex; flex-direction: column; justify-content: center; }
+    #seqBox::-webkit-scrollbar { height: 6px; }
+    #seqBox::-webkit-scrollbar-track { background: var(--color-bg); border-radius: 10px; }
+    #seqBox::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 10px; }
+    #seqBox::-webkit-scrollbar-thumb:hover { background: var(--color-text-muted); }
+    .seq-empty { color: var(--color-text-muted); font-size: 13px; text-align: center; padding: 1rem 0; }
+    .seq-row { display: flex; align-items: center; gap: 1rem; margin-bottom: 0.5rem; font-family: var(--font-mono); font-size: 13px; min-width: max-content; }
+    .seq-label { width: 80px; color: var(--color-text-muted); font-weight: 600; flex-shrink: 0; }
+    .seq-bases { display: flex; gap: 4px; }
+    .base { width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; border-radius: 6px; font-weight: 600; flex-shrink: 0; }
+    .b-A { background: #e8f8f2; color: #008a5e; } .b-T { background: #fce8e8; color: #d32f2f; } .b-G { background: #fff4e5; color: #ed6c02; } .b-C { background: #e8f2fc; color: #0066cc; } .b-X { background: var(--color-bg); color: var(--color-text-muted); opacity: 0.5; }
+    .metrics { display: flex; gap: 2rem; margin-top: 1rem; padding-top: 1.5rem; border-top: 1px solid var(--color-border); }
+    .metric { flex: 1; }
+    .metric-label { font-size: 12px; font-weight: 600; color: var(--color-text-muted); margin-bottom: 8px; }
+    .progress-bar { width: 100%; height: 8px; background: var(--color-bg); border-radius: 99px; overflow: hidden; }
+    .progress-fill { height: 100%; width: 0%; transition: width 1s var(--os-spring); }
+    .fill-blue { background: #0066cc; } .fill-green { background: #008a5e; }
+    .metric-val { font-family: var(--font-mono); font-weight: 600; margin-top: 8px; font-size: 14px; }
+
+    /* --- FLOATING ACTION BUTTON --- */
+    #fab {
+      position: fixed; bottom: 2rem; right: 2rem; z-index: 999;
+      background: var(--color-card); border: 1px solid var(--color-border);
+      border-radius: 99px; padding: 10px 18px; font-size: 13px; font-weight: 600;
+      color: var(--color-text-main); cursor: pointer; display: flex; align-items: center; gap: 8px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1); transition: all 0.3s var(--os-spring);
+      opacity: 0; pointer-events: none; transform: translateY(10px);
+    }
+    #fab.visible { opacity: 1; pointer-events: all; transform: translateY(0); }
+    #fab:hover { box-shadow: 0 8px 30px rgba(0,0,0,0.15); transform: translateY(-2px); }
+    #fab svg { width: 14px; height: 14px; }
+
+    /* --- RESPONSIVE ADJUSTMENTS --- */
+    @media (max-width: 768px) {
+      /* --- START OF REPLACEMENT --- */
+      .workflow-track { flex-direction: column; align-items: stretch; gap: 2rem; }
+      .workflow-step { 
+        display: grid; 
+        grid-template-columns: auto 1fr; 
+        column-gap: 1rem; 
+        text-align: left; 
+        align-items: start; 
+      }
+      .workflow-step:not(:last-child)::after { top: 50px; left: 24px; width: 2px; height: calc(100% + 10px); }
+      .step-icon { grid-column: 1; grid-row: 1 / 4; margin: 0; }
+      .step-num { margin-bottom: 2px; align-self: end; }
+      .step-title { margin-bottom: 2px; }
+      .step-desc { max-width: 100%; }
+      .seq-row { gap: 0.5rem; }
+      .seq-label { width: 60px; font-size: 11px; }
+      .seq-bases { gap: 2px; }
+      .base { width: 20px; height: 20px; font-size: 11px; border-radius: 4px; }
+      .demo-header { flex-direction: column; align-items: flex-start; }
+      .btn-group { width: 100%; justify-content: space-between; }
+      .metrics { flex-direction: column; gap: 1rem; }
+      .workflow-tooltip { display: none; }
+      #fab { bottom: 1rem; right: 1rem; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  
+  <div id="mindmap-container">
+    <svg id="mindmap-svg"></svg>
+
+    <div class="hero-node" id="heroNode">
+      <div class="kicker">National Center for Biotechnology Information</div>
+      <h1>Where scientists search the language of life</h1>
+      <p>NCBI is a massive ecosystem. Expand any module below to explore the underlying data structures, databases, and algorithms.</p>
+      
+      <div class="search-wrapper">
+        <input type="text" class="search-input" id="searchInput" placeholder="Search databases, tools, or terms (e.g. 'DNA')..." aria-label="Search NCBI topics">
+        <svg class="search-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+        <button class="search-clear" id="searchClear" aria-label="Clear search" title="Clear search">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"></path></svg>
+        </button>
+      </div>
+    </div>
+    
+    <div class="grid" id="cardGrid">
+      
+      <!-- CARD 1: Literature -->
+      <div class="card c-blue" data-color="#0066cc" onclick="toggleCard(this)" role="button" aria-expanded="false" tabindex="0">
+        <div class="card-header">
+          <div class="icon-box"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg></div>
+          <div class="card-title-group" style="flex:1;">
+            <h3>Literature & Taxonomy</h3>
+            <p>Over 36 million biomedical citations and the tree of life.</p>
+          </div>
+          <svg class="icon-chevron" width="20" height="20" fill="none" stroke="var(--color-text-muted)" stroke-width="2" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"></path></svg>
+        </div>
+        <div class="card-badge">Literature</div>
+        <div class="card-content-wrapper"><div class="card-content"><div class="card-content-inner" onclick="event.stopPropagation()">
+          <div class="data-section">
+            <div class="data-header"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16m-7 6h7"></path></svg> Database Distinctions</div>
+            <div class="data-grid">
+              <div class="data-item"><strong>PubMed (Index Only)</strong> The world's largest biomedical citation index — 36M+ abstracts. Free to search, links to publisher sites. No guarantee of free full text.</div>
+              <div class="data-item"><strong>PMC (Full Text Archive)</strong> PubMed Central provides completely free, open-access full text of millions of journal articles. Mandated by NIH for federally funded research.</div>
+            </div>
+          </div>
+          <div class="data-section">
+            <div class="data-header"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path></svg> Taxonomy System</div>
+            <div class="data-grid">
+              <div class="data-item"><strong>Tree of Life</strong> Curated classification covering 8 ranks: Domain → Kingdom → Phylum → Class → Order → Family → Genus → Species. Linked to all sequence records.</div>
+            </div>
+          </div>
+          <div class="data-section">
+            <div class="data-header"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg> Search Operators</div>
+            <div class="data-grid">
+              <div class="data-item">Boolean operators and field tags power precision searches.
+                <div class="pill-group">
+                  <span class="pill">[MeSH]</span>
+                  <span class="pill">[Author]</span>
+                  <span class="pill">[TIAB]</span>
+                  <span class="pill">AND / OR / NOT</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div></div></div>
+      </div>
+
+      <!-- CARD 2: ClinVar -->
+      <div class="card c-orange" data-color="#e65100" onclick="toggleCard(this)" role="button" aria-expanded="false" tabindex="0">
+        <div class="card-header">
+          <div class="icon-box"><svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M3 12h4l3-9 5 18 3-9h3"></path></svg></div>
+          <div class="card-title-group" style="flex:1;">
+            <h3>ClinVar & Genetics</h3>
+            <p>Connecting human genomic variations to health and disease.</p>
+          </div>
+          <svg class="icon-chevron" width="20" height="20" fill="none" stroke="var(--color-text-muted)" stroke-width="2" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"></path></svg>
+        </div>
+        <div class="card-badge">Clinical</div>
+        <div class="card-content-wrapper"><div class="card-content"><div class="card-content-inner" onclick="event.stopPropagation()">
+          <div class="data-section">
+            <div class="data-header"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg> Variant Classifications</div>
+            <div class="data-grid">
+              <div class="data-item"><strong>Pathogenic / Likely Pathogenic</strong> Strong evidence the variant causes disease. Used in clinical diagnostics and genetic counseling reports.</div>
+              <div class="data-item"><strong>VUS (Variant of Uncertain Significance)</strong> Insufficient evidence to classify. Common bottleneck in clinical genomics — reclassified as data accumulates.</div>
+              <div class="data-item"><strong>Benign / Likely Benign</strong> Evidence supports no disease association. Often common population variants with high allele frequency.</div>
+            </div>
+          </div>
+          <div class="data-section">
+            <div class="data-header"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg> Key Relationships</div>
+            <div class="data-grid">
+              <div class="data-item">ClinVar links each variant to:
+                <div class="pill-group">
+                  <span class="pill">Gene</span>
+                  <span class="pill">Condition (OMIM)</span>
+                  <span class="pill">dbSNP rsID</span>
+                  <span class="pill">Clinical assertion</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div></div></div>
+      </div>
+
+      <!-- CARD 3: GenBank -->
+      <div class="card c-green" data-color="#008a5e" onclick="toggleCard(this)" role="button" aria-expanded="false" tabindex="0">
+        <div class="card-header">
+          <div class="icon-box"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg></div>
+          <div class="card-title-group" style="flex:1;">
+            <h3>Genomes & GenBank</h3>
+            <p>Comprehensive DNA/RNA sequence repositories.</p>
+          </div>
+          <svg class="icon-chevron" width="20" height="20" fill="none" stroke="var(--color-text-muted)" stroke-width="2" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"></path></svg>
+        </div>
+        <div class="card-badge">Genomics</div>
+        <div class="card-content-wrapper"><div class="card-content"><div class="card-content-inner" onclick="event.stopPropagation()">
+          <div class="data-section">
+            <div class="data-header"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg> Core Databases</div>
+            <div class="data-grid">
+              <div class="data-item"><strong>GenBank (Archival)</strong> Open-access — anyone can submit sequences. Over 500 billion nucleotide bases. Accepts raw, unverified submissions.</div>
+              <div class="data-item"><strong>RefSeq (Curated)</strong> NCBI-curated, non-redundant reference sequences. Each entry manually reviewed. Gold standard for genome annotation. Prefix: NM_ (mRNA), NP_ (protein), NC_ (chromosome).</div>
+            </div>
+          </div>
+          <div class="data-section">
+            <div class="data-header"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg> FASTA Format</div>
+            <div class="data-grid">
+              <div class="data-item">Standard sequence format. Header line starts with &gt; followed by accession and description. Sequence follows on next lines.
+                <div class="pill-group">
+                  <span class="pill">&gt;NC_000001.11</span>
+                  <span class="pill">ATCGGCTAA...</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="data-section">
+            <div class="data-header"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064"></path></svg> INSDC Partnership</div>
+            <div class="data-grid">
+              <div class="data-item">GenBank synchronizes daily with EMBL-EBI (Europe) and DDBJ (Japan) — forming the International Nucleotide Sequence Database Collaboration.</div>
+            </div>
+          </div>
+        </div></div></div>
+      </div>
+
+      <!-- CARD 4: Protein Structures -->
+      <div class="card c-purple" data-color="#5e35b1" onclick="toggleCard(this)" role="button" aria-expanded="false" tabindex="0">
+        <div class="card-header">
+          <div class="icon-box"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 12m-3 0a3 3 0 1 0 6 0a3 3 0 1 0 -6 0"></path><path d="M12 15v4"></path><path d="M12 19m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"></path><path d="M12 9v-4"></path><path d="M12 5m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"></path><path d="M9.5 10.5l-3.5 -2"></path><path d="M6 8.5m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"></path><path d="M14.5 10.5l3.5 -2"></path><path d="M18 8.5m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"></path><path d="M9.5 13.5l-3.5 2"></path><path d="M6 15.5m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"></path><path d="M14.5 13.5l3.5 2"></path><path d="M18 15.5m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"></path></svg></div>
+          <div class="card-title-group" style="flex:1;">
+            <h3>Protein Structures</h3>
+            <p>Amino acid sequences, domains, and 3D modeling.</p>
+          </div>
+          <svg class="icon-chevron" width="20" height="20" fill="none" stroke="var(--color-text-muted)" stroke-width="2" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"></path></svg>
+        </div>
+        <div class="card-badge">Structure</div>
+        <div class="card-content-wrapper"><div class="card-content"><div class="card-content-inner" onclick="event.stopPropagation()">
+          <div class="data-section">
+            <div class="data-header"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 10l-2 1m0 0l-2-1m2 1v2.5M20 7l-2 1m2-1l-2-1m2 1v2.5M14 4l-2-1-2 1M4 7l2-1M4 7l2 1M4 7v2.5M12 21l-2-1m2 1l2-1m-2 1v-2.5M6 18l-2-1v-2.5M18 18l2-1v-2.5"></path></svg> Structural Databases</div>
+            <div class="data-grid">
+              <div class="data-item"><strong>PDB Integration</strong> Links directly to the Protein Data Bank for experimentally-determined 3D structures via X-ray crystallography, cryo-EM, or NMR.</div>
+              <div class="data-item"><strong>CDD (Conserved Domain DB)</strong> Identifies functional domains and conserved motifs within a query protein sequence. Uses position-specific scoring matrices (PSSMs).</div>
+            </div>
+          </div>
+          <div class="data-section">
+            <div class="data-header"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 3H5a2 2 0 00-2 2v4m6-6h10a2 2 0 012 2v4M9 3v18m0 0h10a2 2 0 002-2V9M9 21H5a2 2 0 01-2-2V9m0 0h18"></path></svg> Scoring: BLOSUM62</div>
+            <div class="data-grid">
+              <div class="data-item">Standard substitution matrix for protein alignments. Derived from blocks of ungapped alignments of related proteins with ~62% identity. Positive scores = favorable substitutions; negative = costly.
+                <div class="pill-group">
+                  <span class="pill">Trp→Trp: +11</span>
+                  <span class="pill">Trp→Gly: -3</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="data-section">
+            <div class="data-header"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"></path></svg> Protein DB Types</div>
+            <div class="data-grid">
+              <div class="data-item">
+                <div class="pill-group">
+                  <span class="pill">nr (non-redundant)</span>
+                  <span class="pill">UniProt/Swiss-Prot</span>
+                  <span class="pill">PDB sequences</span>
+                  <span class="pill">RefSeq proteins</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div></div></div>
+      </div>
+
+      <!-- CARD 5: SRA -->
+      <div class="card c-teal" data-color="#00796b" onclick="toggleCard(this)" role="button" aria-expanded="false" tabindex="0">
+        <div class="card-header">
+          <div class="icon-box"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 6a8 3 0 1016 0A8 3 0 104 6zm0 0v12a8 3 0 0016 0V6"></path><path d="M4 12a8 3 0 1016 0"></path></svg></div>
+          <div class="card-title-group" style="flex:1;">
+            <h3>Sequence Read Archive</h3>
+            <p>The largest public repository of raw NGS sequencing data.</p>
+          </div>
+          <svg class="icon-chevron" width="20" height="20" fill="none" stroke="var(--color-text-muted)" stroke-width="2" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"></path></svg>
+        </div>
+        <div class="card-badge">Big Data</div>
+        <div class="card-content-wrapper"><div class="card-content"><div class="card-content-inner" onclick="event.stopPropagation()">
+          <div class="data-section">
+            <div class="data-header"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg> Next-Gen Sequencing</div>
+            <div class="data-grid">
+              <div class="data-item"><strong>Raw Reads (FASTQ format)</strong> Stores petabytes of unaligned reads from Illumina, PacBio, Oxford Nanopore platforms. Each read has 4 lines: ID, sequence, separator, quality scores.</div>
+              <div class="data-item"><strong>FASTQ Quality Scores</strong> Phred quality scores (Q) encoded as ASCII characters. Q20 = 99% accuracy. Q30 = 99.9% accuracy. Minimum threshold for most bioinformatics pipelines.</div>
+            </div>
+          </div>
+          <div class="data-section">
+            <div class="data-header"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"></path></svg> Access Tools</div>
+            <div class="data-grid">
+              <div class="data-item">
+                <div class="pill-group">
+                  <span class="pill">fasterq-dump</span>
+                  <span class="pill">prefetch</span>
+                  <span class="pill">SRA Toolkit</span>
+                  <span class="pill">AWS Open Data</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div></div></div>
+      </div>
+
+      <!-- CARD 6: BLAST -->
+      <div class="card c-red" data-color="#d32f2f" onclick="toggleCard(this)" role="button" aria-expanded="false" tabindex="0">
+        <div class="card-header">
+          <div class="icon-box"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg></div>
+          <div class="card-title-group" style="flex:1;">
+            <h3>BLAST Tool</h3>
+            <p>Basic Local Alignment Search Tool logic & metrics.</p>
+          </div>
+          <svg class="icon-chevron" width="20" height="20" fill="none" stroke="var(--color-text-muted)" stroke-width="2" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"></path></svg>
+        </div>
+        <div class="card-badge">Alignment</div>
+        <div class="card-content-wrapper"><div class="card-content"><div class="card-content-inner" onclick="event.stopPropagation()">
+          <div class="data-section">
+            <div class="data-header"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg> Scoring & Metrics</div>
+            <div class="data-grid">
+              <div class="data-item"><strong>E-Value (Expect Value)</strong> Expected number of hits of similar quality by chance alone. E &lt; 0.001 = significant. E = 3e-14 = near-perfect match. Lower is better.</div>
+              <div class="data-item"><strong>Bit Score</strong> Normalized alignment score — higher is better. Comparable across databases of different sizes. Derived from raw score using Karlin-Altschul statistics.</div>
+            </div>
+          </div>
+          <div class="data-section">
+            <div class="data-header"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg> Algorithm Variants</div>
+            <div class="data-grid">
+              <div class="data-item">
+                <div class="pill-group">
+                  <span class="pill">blastn (DNA→DNA)</span>
+                  <span class="pill">blastp (prot→prot)</span>
+                  <span class="pill">blastx (DNA→prot)</span>
+                  <span class="pill">tblastn (prot→DNA)</span>
+                  <span class="pill">megablast</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="data-section">
+            <div class="data-header"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg> How BLAST Works</div>
+            <div class="data-grid">
+              <div class="data-item"><strong>1. Seed → Extend → Score</strong> Splits query into short "words" (k-mers). Finds exact matches in DB. Extends alignment in both directions while score stays above threshold. Applies Smith-Waterman locally.</div>
+            </div>
+          </div>
+        </div></div></div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="section-title">Application: Connecting the Nodes</div>
+  
+  <div class="workflow-box">
+    <div class="workflow-header">
+      <h3>The Genetic Disease Workflow</h3>
+      <p>How researchers traverse the NCBI network to solve a clinical case. Hover each step for details.</p>
+    </div>
+    
+    <div class="workflow-track">
+      <div class="workflow-step c-blue">
+        <div class="step-icon"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg></div>
+        <div class="step-num">Step 01</div><div class="step-title">PubMed</div><div class="step-desc">Query literature for symptoms.</div>
+        <div class="workflow-tooltip"><strong>PubMed Search</strong> Use MeSH terms + symptom keywords. Filter by review articles to get an overview of known genetic causes for the phenotype.</div>
+      </div>
+      <div class="workflow-step c-orange">
+        <div class="step-icon"><svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M3 12h4l3-9 5 18 3-9h3"></path></svg></div>
+        <div class="step-num">Step 02</div><div class="step-title">ClinVar</div><div class="step-desc">Identify pathogenic variants.</div>
+        <div class="workflow-tooltip"><strong>ClinVar Lookup</strong> Search the candidate gene. Filter by "Pathogenic" or "Likely Pathogenic." Cross-reference with patient's variant from sequencing data.</div>
+      </div>
+      <div class="workflow-step c-green">
+        <div class="step-icon"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg></div>
+        <div class="step-num">Step 03</div><div class="step-title">GenBank</div><div class="step-desc">Pull the reference DNA.</div>
+        <div class="workflow-tooltip"><strong>Fetch RefSeq</strong> Download the canonical mRNA transcript (NM_*) or chromosome region (NC_*) as FASTA for local comparison and annotation.</div>
+      </div>
+      <div class="workflow-step c-purple">
+        <div class="step-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 12m-3 0a3 3 0 1 0 6 0a3 3 0 1 0 -6 0"></path><path d="M12 15v4"></path><path d="M12 19m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"></path><path d="M12 9v-4"></path><path d="M12 5m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"></path></svg></div>
+        <div class="step-num">Step 04</div><div class="step-title">Proteins</div><div class="step-desc">Analyze broken 3D structures.</div>
+        <div class="workflow-tooltip"><strong>Structure Analysis</strong> Use PDB viewer to inspect wild-type vs mutant protein folding. CDD reveals if variant disrupts a conserved functional domain.</div>
+      </div>
+      <div class="workflow-step c-red">
+        <div class="step-icon"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg></div>
+        <div class="step-num">Step 05</div><div class="step-title">BLAST</div><div class="step-desc">Align sequence to find origins.</div>
+        <div class="workflow-tooltip"><strong>blastp / blastn</strong> Run the mutant protein against nr database. Low E-value hits confirm the affected domain is conserved across species — supporting pathogenicity.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-title">Live Alignment Demo</div>
+
+  <div class="demo-box">
+    <div class="demo-header">
+      <h3>Sequence Alignment Visualizer</h3>
+      <div class="btn-group">
+        <button class="btn btn-secondary" onclick="downloadFASTA()" title="Download as .fasta file" id="exportBtn">
+          <svg fill="none" stroke="currentColor" stroke-width="2" width="16" height="16" viewBox="0 0 24 24"><path d="M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 11l5 5 5-5M12 4v12"></path></svg>
+          Export FASTA
+        </button>
+        <button class="btn" onclick="runBlast()" id="runBtn">
+          <svg fill="none" stroke="currentColor" stroke-width="2" width="16" height="16" viewBox="0 0 24 24"><path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+          Run Align
+        </button>
+      </div>
+    </div>
+    
+    <div id="seqBox"><p class="seq-empty">Press "Run Align" to begin the simulated BLAST alignment →</p></div>
+
+    <div class="metrics">
+      <div class="metric">
+        <div class="metric-label">Max Identity Score</div>
+        <div class="progress-bar"><div class="progress-fill fill-blue" id="bar1"></div></div>
+        <div class="metric-val" id="val1">—</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">E-Value Confidence</div>
+        <div class="progress-bar"><div class="progress-fill fill-green" id="bar2"></div></div>
+        <div class="metric-val" id="val2">—</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Floating Action Button -->
+<button id="fab" onclick="resetAll()" aria-label="Close all cards and return to top">
+  <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 10l7-7m0 0l7 7m-7-7v18"></path></svg>
+  Reset View
+</button>
+
+<script>
+  // --- SEARCH WITH CLEAR BUTTON ---
+  const searchInput = document.getElementById('searchInput');
+  const searchClear = document.getElementById('searchClear');
+
+  searchInput.addEventListener('input', (e) => {
+    const term = e.target.value.toLowerCase();
+    searchClear.classList.toggle('visible', term.length > 0);
+    const cards = document.querySelectorAll('.card');
+    cards.forEach(card => {
+      const content = card.textContent.toLowerCase();
+      if (content.includes(term)) {
+        card.classList.remove('filtered-out');
+      } else {
+        card.classList.add('filtered-out');
+        card.classList.remove('active');
+        card.setAttribute('aria-expanded', 'false');
+      }
+    });
+    setTimeout(drawMindMapLines, 50);
+    updateFab();
+  });
+
+  searchClear.addEventListener('click', () => {
+    searchInput.value = '';
+    searchClear.classList.remove('visible');
+    document.querySelectorAll('.card').forEach(card => card.classList.remove('filtered-out'));
+    setTimeout(drawMindMapLines, 50);
+    updateFab();
+    searchInput.focus();
+  });
+
+  // --- MIND MAP LINES ---
+  function drawMindMapLines() {
+    const container = document.getElementById('mindmap-container');
+    const svg = document.getElementById('mindmap-svg');
+    const rootNode = document.getElementById('heroNode');
+    const cards = document.querySelectorAll('.card');
+    svg.innerHTML = '';
+    const containerRect = container.getBoundingClientRect();
+    const rootRect = rootNode.getBoundingClientRect();
+    const startX = rootRect.left - containerRect.left + (rootRect.width / 2);
+    const startY = rootRect.bottom - containerRect.top - 20;
+    cards.forEach((card) => {
+      if (card.classList.contains('filtered-out')) return;
+      const cardRect = card.getBoundingClientRect();
+      const endX = cardRect.left - containerRect.left + (cardRect.width / 2);
+      const endY = cardRect.top - containerRect.top;
+      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      const curveHeight = Math.abs(endY - startY) * 0.4;
+      const d = `M ${startX} ${startY} C ${startX} ${startY + curveHeight}, ${endX} ${endY - curveHeight}, ${endX} ${endY}`;
+      path.setAttribute('d', d);
+      if (card.classList.contains('active')) {
+        path.setAttribute('class', 'mindmap-path path-active');
+        const color = card.getAttribute('data-color');
+        path.style.stroke = color;
+        path.style.filter = `drop-shadow(0 0 8px ${color})`;
+      } else {
+        path.setAttribute('class', 'mindmap-path path-faint');
+      }
+      svg.appendChild(path);
+    });
+  }
+
+  window.addEventListener('load', drawMindMapLines);
+  window.addEventListener('resize', () => { requestAnimationFrame(drawMindMapLines); });
+
+  // --- TOGGLE CARD ---
+  function toggleCard(element) {
+    const isActive = element.classList.contains('active');
+    document.querySelectorAll('.card').forEach(card => {
+      card.classList.remove('active');
+      card.setAttribute('aria-expanded', 'false');
+    });
+    if (!isActive) {
+      element.classList.add('active');
+      element.setAttribute('aria-expanded', 'true');
+    }
+    drawMindMapLines();
+    setTimeout(drawMindMapLines, 400);
+    updateFab();
+  }
+
+  // --- KEYBOARD SUPPORT ---
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      const anyActive = document.querySelector('.card.active');
+      if (anyActive) {
+        document.querySelectorAll('.card').forEach(card => {
+          card.classList.remove('active');
+          card.setAttribute('aria-expanded', 'false');
+        });
+        drawMindMapLines();
+        updateFab();
+      }
+    }
+  });
+
+  // Keyboard activation for cards (Enter/Space)
+  document.querySelectorAll('.card').forEach(card => {
+    card.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        toggleCard(card);
+      }
+    });
+  });
+
+  // --- FAB BUTTON ---
+  function updateFab() {
+    const fab = document.getElementById('fab');
+    const anyActive = document.querySelector('.card.active');
+    const searchHasValue = searchInput.value.length > 0;
+    fab.classList.toggle('visible', !!(anyActive || searchHasValue));
+  }
+
+  function resetAll() {
+    document.querySelectorAll('.card').forEach(card => {
+      card.classList.remove('active');
+      card.classList.remove('filtered-out');
+      card.setAttribute('aria-expanded', 'false');
+    });
+    searchInput.value = '';
+    searchClear.classList.remove('visible');
+    drawMindMapLines();
+    updateFab();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // --- BLAST DEMO (starts empty, user triggers) ---
+  const Q  = ['A','T','C','G','T','C','G','A','T','G','G','C'];
+  const M1 = ['A','T','C','G','T','C','G','A','T','A','G','C'];
+  const M2 = ['A','T','A','G','T','G','G','A','T','G','G','C'];
+
+  function createBase(ch, ref) {
+    const match = ref ? ch === ref : true;
+    const cls = match ? `b-${ch}` : 'b-X';
+    return `<div class="base ${cls}">${ch}</div>`;
+  }
+
+  function createRow(label, arr, ref) {
+    const bases = arr.map((ch, i) => createBase(ch, ref ? ref[i] : null)).join('');
+    return `<div class="seq-row"><div class="seq-label">${label}</div><div class="seq-bases">${bases}</div></div>`;
+  }
+
+  function runBlast() {
+    const box = document.getElementById('seqBox');
+    const b1 = document.getElementById('bar1');
+    const b2 = document.getElementById('bar2');
+    const v1 = document.getElementById('val1');
+    const v2 = document.getElementById('val2');
+    const btn = document.getElementById('runBtn');
+
+    btn.disabled = true;
+    btn.innerHTML = '<svg fill="none" stroke="currentColor" stroke-width="2" width="16" height="16" viewBox="0 0 24 24" style="animation:spin 1s linear infinite"><path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg> Running...';
+
+    b1.style.width = '0%'; b2.style.width = '0%';
+    v1.innerText = 'Scanning...'; v2.innerText = 'Scanning NCBI DB...';
+    box.innerHTML = createRow('Query', Q, null);
+
+    setTimeout(() => { box.innerHTML = createRow('Query', Q, null) + createRow('Match 1', M1, Q); }, 500);
+    setTimeout(() => { box.innerHTML = createRow('Query', Q, null) + createRow('Match 1', M1, Q) + createRow('Match 2', M2, Q); }, 1000);
+    setTimeout(() => {
+      b1.style.width = '91%'; v1.innerText = '91.6% (11/12 bases)';
+      b2.style.width = '100%'; v2.innerText = '3e-14 (Highly Significant)';
+      btn.disabled = false;
+      btn.innerHTML = '<svg fill="none" stroke="currentColor" stroke-width="2" width="16" height="16" viewBox="0 0 24 24"><path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg> Run Align';
+    }, 1200);
+  }
+  
+  function downloadFASTA() {
+    const fastaContent = `>Query_Sequence_Simulated\n${Q.join('')}\n>Database_Match_1 (Identity: 91.6%, E-value: 3e-14)\n${M1.join('')}\n>Database_Match_2 (Identity: Low)\n${M2.join('')}\n`;
+    const blob = new Blob([fastaContent], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'ncbi_alignment_results.fasta';
+    document.body.appendChild(a); a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  // Spinner animation
+  const style = document.createElement('style');
+  style.textContent = '@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }';
+  document.head.appendChild(style);
+</script>
+
+</body>
+</html>
