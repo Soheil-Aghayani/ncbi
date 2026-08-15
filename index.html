@@ -5,12 +5,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>NCBI Interactive Explainer</title>
+  <meta name="description" content="An interactive visual guide to NCBI databases, PubMed, ClinVar, GenBank, and BLAST research workflows.">
   <style>
     :root {
       --color-bg: #f5f5f7;
       --color-card: #ffffff;
       --color-text-main: #1d1d1f;
-      --color-text-muted: #86868b;
+      --color-text-muted: #6b6b70;
       --color-border: rgba(0, 0, 0, 0.1);
       --color-surface: rgba(255,255,255,0.6);
       --radius-sm: 12px;
@@ -25,7 +26,7 @@
         --color-bg: #1c1c1e;
         --color-card: #2c2c2e;
         --color-text-main: #f5f5f7;
-        --color-text-muted: #98989d;
+        --color-text-muted: #a1a1a6;
         --color-border: rgba(255, 255, 255, 0.1);
         --color-surface: rgba(44,44,46,0.8);
       }
@@ -152,7 +153,7 @@
     .c-green .icon-box, .c-green .card-badge { background: #e8f8f2; color: #008a5e; }
     .c-purple .icon-box, .c-purple .card-badge { background: #f0ecfc; color: #5e35b1; }
     .c-red .icon-box, .c-red .card-badge { background: #fce8e8; color: #d32f2f; }
-    .c-orange .icon-box, .c-orange .card-badge { background: #fff4e5; color: #e65100; }
+    .c-orange .icon-box, .c-orange .card-badge { background: #fff4e5; color: #a83f00; }
     .c-teal .icon-box, .c-teal .card-badge { background: #e0f8f5; color: #00796b; }
     .c-blue .pill { background: #e8f2fc; border-color: #cce0f5; color: #0052a3; }
     .c-green .pill { background: #e8f8f2; border-color: #ccebe0; color: #006b49; }
@@ -331,7 +332,7 @@
 </head>
 <body>
 
-<div class="container">
+<main class="container" id="main-content">
   
   <div id="mindmap-container">
     <svg id="mindmap-svg"></svg>
@@ -342,7 +343,7 @@
       <p>This is an interactive helper. Select a real-world research mission below to learn exactly how and where to search on the actual NCBI website:</p>
       
       <div style="margin-top: 2rem; display: flex; flex-direction: column; gap: 1rem; text-align: left;">
-        <h4 style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--color-text-muted); letter-spacing: 1px;">Select a Search Mission:</h4>
+        <h2 style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--color-text-muted); letter-spacing: 1px;">Select a Search Mission:</h2>
         
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem;">
           <div class="btn mission-btn" onclick="activateMission('variant')" style="display: flex; flex-direction: column; align-items: flex-start; padding: 1.25rem 1rem; border-radius: 12px; text-align: left; height: auto; background: var(--color-bg); cursor: pointer; width: 100%;">
@@ -681,7 +682,7 @@ ACCAGAGGTAAGGGGGTTCTAAATTTTAAACCGGTTTAA</div>
     </div>
   </div>
 
-</div>
+</main>
 
 <button id="fab" onclick="resetAll()" aria-label="Close all cards and return to top">
   <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 10l7-7m0 0l7 7m-7-7v18"></path></svg>
