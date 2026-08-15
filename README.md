@@ -1,4 +1,6 @@
 <div align="center">
+  <img src="docs/readme-hero.svg" alt="NCBI interactive explainer visual hero" width="100%">
+
   <h1>NCBI INTERACTIVE EXPLAINER</h1>
   <p><strong>Where scientists search the language of life.</strong></p>
   <p>
